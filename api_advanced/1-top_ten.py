@@ -1,43 +1,39 @@
 #!/usr/bin/python3
 """
-1-top_ten.py
-
 Query the Reddit API and print the titles of the first 10 hot posts
 for a given subreddit.
-
-
 """
 import requests
 
 
 def top_ten(subreddit):
-    """Print the titles of the first 10 hot posts for subreddit."""
-    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    headers = {"User-Agent": "ALU:api_advanced:1.0 (by /u/yourusername)"}
-    params = {"limit": 10}
-
-    try:
-        response = requests.get(
-            url, headers=headers, params=params, allow_redirects=False
-        )
-    except Exception:
+    """Print the titles of the first 10 hot posts for a given subreddit."""
+    if not subreddit or not isinstance(subreddit, str):
         print(None)
         return
 
+    url = f"https://www.reddit.com/r/{subreddit}/hot.json"
+    headers = {
+        "User-Agent": "ALUProject:RedditAPI:v1.0 (by /u/StudentExample)",
+        "Accept": "application/json",
+    }
+    params = {"limit": 10}
+
+    response = requests.get(url, headers=headers, params=params,
+                            allow_redirects=False)
+
+    # Reddit returns 302 for invalid subreddits, and 429 for rate limit
     if response.status_code != 200:
         print(None)
         return
 
-    try:
-        children = response.json().get("data", {}).get("children", [])
-    except Exception:
+    results = response.json().get("data", {}).get("children", [])
+
+    if not results:
         print(None)
         return
 
-    if not children:
-        print(None)
-        return
-
-    for child in children:
-        title = child.get("data", {}).get("title")
-        print(title)
+    for post in results:
+        title = post.get("data", {}).get("title")
+        if title:
+            print(title)
