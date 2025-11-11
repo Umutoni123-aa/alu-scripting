@@ -1,28 +1,29 @@
 #!/usr/bin/python3
-"""
-Function that queries the Reddit API and prints the titles of the
-first 10 hot posts for a given subreddit.
-"""
+
+'''CSV export'''
+
+import csv
 import requests
+import sys
 
+if __name__ == '__main__':
+    user_id = sys.argv[1]
+    user_url = "https://jsonplaceholder.typicode.com/users/{}" \
+        .format(user_id)
+    todos_url = "https://jsonplaceholder.typicode.com/users/{}/todos/" \
+        .format(user_id)
 
-def top_ten(subreddit):
-    """Prints the titles of the first 10 hot posts for a subreddit."""
-    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    headers = {"User-Agent": "Mozilla/5.0"}
-    params = {"limit": 10}
+    user_info = requests.request('GET', user_url).json()
+    todos_info = requests.request('GET', todos_url).json()
 
-    response = requests.get(url, headers=headers,
-                            params=params, allow_redirects=False)
+    employee_name = user_info["name"]
+    task_completed = list(filter(lambda obj:
+                                 (obj["completed"] is True), todos_info))
+    number_of_done_tasks = len(task_completed)
+    total_number_of_tasks = len(todos_info)
 
-    if response.status_code != 200:
-        print(None)
-        return
-
-    posts = response.json().get("data", {}).get("children", [])
-    if not posts:
-        print(None)
-        return
-
-    for post in posts:
-        print(post.get("data", {}).get("title"))
+    with open('{}.csv'.format(user_id), 'w') as csvfile:
+        csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+        [csvwriter.writerow([user_id, user_info["username"],
+                             task["completed"], task["title"]])
+         for task in todos_info]
